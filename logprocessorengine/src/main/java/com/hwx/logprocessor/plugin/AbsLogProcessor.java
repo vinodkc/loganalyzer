@@ -16,7 +16,7 @@ public abstract class AbsLogProcessor implements ILogProcessor {
 	protected Map<String, List<Recommendation>>  recommendations;
 
 	protected void loadRecommendations(String dbFile) {
-		recommendations =  readRecommendationFromDB(new File("filename"));
+		recommendations =  readRecommendationFromDB(new File(dbFile));
 	}
 	
 	

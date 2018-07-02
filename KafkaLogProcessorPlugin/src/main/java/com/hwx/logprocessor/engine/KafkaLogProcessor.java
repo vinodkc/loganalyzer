@@ -17,6 +17,12 @@ import com.hwx.logprocessor.vo.Recommendation;
 
 public class KafkaLogProcessor extends  AbsLogProcessor {
 
+	private String recommendationFilePath;
+
+	public KafkaLogProcessor(String recommendationFilePath) {
+     this.recommendationFilePath = recommendationFilePath;
+	}
+
 	private static List<Recommendation> generateRecommendationsHelper(
 			String fileName,
 			Map<String, List<Recommendation>> recommendationMap) {
@@ -91,7 +97,7 @@ public class KafkaLogProcessor extends  AbsLogProcessor {
 	}
 
 	public void loadRecommendations() {
-		this.loadRecommendations("kafkaDBFile");
+		this.loadRecommendations(recommendationFilePath);
 	}
 	
 	public List<Recommendation> generateRecommendations(String parsedOutput) {
