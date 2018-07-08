@@ -7,25 +7,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
-
-import com.hwx.logprocessor.engine.KafkaLogProcessor;
-import com.hwx.logprocessor.plugin.AbsLogProcessor;
-import com.hwx.logprocessor.plugin.ILogProcessor;
-import com.hwx.logprocessor.plugin.PluginFactory;
-import com.hwx.logprocessor.vo.Recommendation;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.hwx.logprocessor.Processor;
+import com.hwx.logprocessor.PropertyFactory;
+import com.hwx.logprocessor.plugin.ILogProcessor;
+import com.hwx.logprocessor.plugin.PluginFactory;
 
 /**
  * Handles requests for the application file upload requests
@@ -86,25 +82,41 @@ public class FileUploadController {
 			
 			String outputDirPath = outputDir.getAbsolutePath();
 
-			String parserPath = rootPath + File.separator + "parser" + File.separator + "parserscript.sh";
+			// String parserPath = rootPath + File.separator + "parser" + File.separator + "parserscript.sh";
+			String parserdir = PropertyFactory.getGlobalProperties().getProperty("parserdir");
+			String parserscript = PropertyFactory.getGlobalProperties().getProperty("parserscript");
+			String parserFilePath = parserdir + File.separator + parserscript;
+			
+			String logstashpath = PropertyFactory.getGlobalProperties().getProperty("logstashpath");
 
-			logger.info("Started " + parserPath);
+			logger.info("Started " + parserFilePath);
 
 			// Call logstash script to generate parsed file
+			
+			Map<Integer, String> result = Processor.execCommand(parserdir,parserFilePath, inputDir.getAbsolutePath(), outputDirPath, compName, caseId, logstashpath);
+			
+			System.out.println("exit code:\n" + result.get(0).toString());
+			System.out.println();
+			System.out.println("command result:\n" + result.get(1).toString());
 
-			ProcessBuilder pb = new ProcessBuilder(parserPath, inputFilePath, outputDirPath);
+		/*	ProcessBuilder pb = new ProcessBuilder(
+					parserFilePath,
+					inputDir.getAbsolutePath(),
+					outputDirPath,
+					compName,
+					caseId);
 			Process process = pb.start();
 			int errCode = process.waitFor();
 			logger.debug("command executed, any errors? " + (errCode == 0 ? "No" : "Yes"));
 			logger.debug("Output:\n" + output(process.getInputStream()));
-			logger.info("Finished Processing " + parserPath);
+			logger.info("Finished Processing " + parserFilePath);*/
 
-			String parsedFilePath = outputDirPath + File.separator + "parsedfile.csv";
+			String parsedFilePath = outputDirPath + File.separator + "complete" + caseId +".csv";
 			// call processor for the Component's Plugin
 
-			ilp.loadRecommendations();
-			List<Recommendation> recommendations = ilp.generateRecommendations(parsedFilePath);
-			
+//			ilp.loadRecommendations();
+//			List<Recommendation> recommendations = ilp.generateRecommendations(parsedFilePath);
+//			
 
 			  String s =  ""+"Recommendations for caseid  " + caseId  + " - uploaded file : " + name +  ""
 		               +" <table border ='1'>"
@@ -114,14 +126,16 @@ public class FileUploadController {
 		               +"<td>Resolution</td> "                              
 		               +"</tr> ";
 			  
-		    for(Recommendation rec : recommendations) {
-		        s = s.concat( "<tr>"
-		                +"<td>"+rec.getKey()+"</td>"
-		                +"<td>"+rec.getLevel()+"</td> "
-		               +"<td>"+rec.getResolution()+"</td> "
-		               +"</tr> ");
-		    }
+//		    for(Recommendation rec : recommendations) {
+//		        s = s.concat( "<tr>"
+//		                +"<td>"+rec.getKey()+"</td>"
+//		                +"<td>"+rec.getLevel()+"</td> "
+//		               +"<td>"+rec.getResolution()+"</td> "
+//		               +"</tr> ");
+//		    }
 		    s=s.concat( "</table>");
+		    
+		    logger.info("output " + s);
 		    return s;
 
 		} catch (Exception e) {
