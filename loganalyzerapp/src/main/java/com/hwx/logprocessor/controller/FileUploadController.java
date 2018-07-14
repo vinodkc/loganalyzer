@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ import com.hwx.logprocessor.Processor;
 import com.hwx.logprocessor.PropertyFactory;
 import com.hwx.logprocessor.plugin.ILogProcessor;
 import com.hwx.logprocessor.plugin.PluginFactory;
+import com.hwx.logprocessor.vo.Recommendation;
 
 /**
  * Handles requests for the application file upload requests
@@ -35,8 +37,9 @@ public class FileUploadController {
 	 * Upload single file using Spring Controller
 	 */
 	@RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
-	public @ResponseBody String uploadFileHandler(@RequestParam("name") String compName,
+	public @ResponseBody String uploadFileHandler(@RequestParam("name") String componentName,
 			@RequestParam("caseid") String caseId, @RequestParam("file") MultipartFile file) {
+		String compName = componentName.toLowerCase();
 		String name = file.getOriginalFilename();
 		if (!file.isEmpty()) {
 			ILogProcessor ilp = PluginFactory.getPlugin(compName);
@@ -55,7 +58,6 @@ public class FileUploadController {
 	private static String processRequest(String compName, String caseId, MultipartFile file, String name, ILogProcessor ilp) {
 		try {
 			byte[] bytes = file.getBytes();
-
 			// Creating the directory to store file
 			String randomStr = UUID.randomUUID().toString();
 			String rootPath = System.getProperty("catalina.home") + File.separator + "loganalysis";
@@ -112,11 +114,13 @@ public class FileUploadController {
 			logger.info("Finished Processing " + parserFilePath);*/
 
 			String parsedFilePath = outputDirPath + File.separator + "complete" + caseId +".csv";
+			
+			System.out.println("parsedFilePath" + parsedFilePath);
 			// call processor for the Component's Plugin
 
-//			ilp.loadRecommendations();
-//			List<Recommendation> recommendations = ilp.generateRecommendations(parsedFilePath);
-//			
+			ilp.loadRecommendations();
+			List<Recommendation> recommendations = ilp.generateRecommendations(parsedFilePath);
+			
 
 			  String s =  ""+"Recommendations for caseid  " + caseId  + " - uploaded file : " + name +  ""
 		               +" <table border ='1'>"
@@ -126,13 +130,13 @@ public class FileUploadController {
 		               +"<td>Resolution</td> "                              
 		               +"</tr> ";
 			  
-//		    for(Recommendation rec : recommendations) {
-//		        s = s.concat( "<tr>"
-//		                +"<td>"+rec.getKey()+"</td>"
-//		                +"<td>"+rec.getLevel()+"</td> "
-//		               +"<td>"+rec.getResolution()+"</td> "
-//		               +"</tr> ");
-//		    }
+		    for(Recommendation rec : recommendations) {
+		        s = s.concat( "<tr>"
+		                +"<td>"+rec.getKey()+"</td>"
+		                +"<td>"+rec.getLevel()+"</td> "
+		               +"<td>"+rec.getResolution()+"</td> "
+		               +"</tr> ");
+		    }
 		    s=s.concat( "</table>");
 		    
 		    logger.info("output " + s);
